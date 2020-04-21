@@ -53,6 +53,7 @@ type apiClient interface {
 	get(string, url.Values) (*http.Response, error)
 	delete(string, url.Values) (*http.Response, error)
 	put(string, url.Values) (*http.Response, error)
+	post(string, url.Values) (*http.Response, error)
 }
 
 // Client is the http client that wraps the remote API.
@@ -61,6 +62,8 @@ type Client struct {
 	username    string
 	apiKey      string
 	testsClient Tests
+	pagespeedClient	PageSpeeds
+	sslClient	Ssls
 }
 
 // New returns a new Client
@@ -151,6 +154,19 @@ func (c *Client) put(path string, v url.Values) (*http.Response, error) {
 	return c.doRequest(r)
 }
 
+
+func (c *Client) post(path string, v url.Values) (*http.Response, error) {
+	r, err := c.newRequest("POST", path, nil, strings.NewReader(v.Encode()))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	fmt.Println("hereee")
+	fmt.Println(strings.NewReader(v.Encode()))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.doRequest(r)
+}
+
 func (c *Client) delete(path string, v url.Values) (*http.Response, error) {
 	r, err := c.newRequest("DELETE", path, v, nil)
 	if err != nil {
@@ -167,4 +183,22 @@ func (c *Client) Tests() Tests {
 	}
 
 	return c.testsClient
+}
+
+// Tests returns a client that implements the `Tests` API.
+func (c *Client) PageSpeeds() PageSpeeds {
+	if c.pagespeedClient == nil {
+		c.pagespeedClient = NewPageSpeeds(c)
+	}
+
+	return c.pagespeedClient
+}
+
+// Tests returns a client that implements the `Tests` API.
+func (c *Client) Ssls() Ssls {
+	if c.sslClient == nil {
+		c.sslClient = NewSsls(c)
+	}
+
+	return c.sslClient
 }

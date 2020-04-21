@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/DreamItGetIT/statuscake"
+	"github.com/andrewn3wman7/statuscake"
 	"strings"
 )
 
@@ -20,9 +20,14 @@ func init() {
 	log = logpkg.New(os.Stderr, "", 0)
 	commands = map[string]command{
 		"list":   cmdList,
+		"listpagespeed": cmdListPg,
+		"listssl": cmdListSsl,
 		"detail": cmdDetail,
+		"detailpg": cmdDetailPg,
 		"delete": cmdDelete,
+		"deletepg": cmdDeletePg,
 		"create": cmdCreate,
+		"createpg": cmdCreatePg,
 		"update": cmdUpdate,
 	}
 }
@@ -69,6 +74,62 @@ func cmdList(c *statuscake.Client, args ...string) error {
 		fmt.Printf("  ContactGroup: %s\n", fmt.Sprint(t.ContactGroup))
 		fmt.Printf("  Uptime: %f\n", t.Uptime)
 	}
+
+	return nil
+}
+
+func cmdListSsl(c *statuscake.Client, args ...string) error {
+	tt := c.Ssls()
+	tests, err := tt.All()
+	if err != nil {
+		return err
+	}
+
+	for _, t := range tests {
+		fmt.Printf("* %d: %s\n", t.ID)
+		fmt.Printf("  Domain: %s\n", t.domain)
+	}
+
+	return nil
+}
+
+func cmdListPg(c *statuscake.Client, args ...string) error {
+	tt := c.PageSpeeds()
+	tests, err := tt.All()
+	if err != nil {
+		return err
+	}
+
+	for _, t := range tests.PageSpeedList {
+		fmt.Printf("* %d \n", t.ID)
+		fmt.Printf("  URL: %s\n", t.Website_url)
+		fmt.Printf("  Name: %d \n", t.Name)
+	}
+	return nil
+}
+
+func cmdDetailPg(c *statuscake.Client, args ...string) error {
+	if len(args) != 1 {
+		return fmt.Errorf("command `detail` requires a single argument `TestID`")
+	}
+
+	id, err := strconv.Atoi(args[0])
+	if err != nil {
+		return err
+	}
+
+	tt := c.PageSpeeds()
+	t, err := tt.Detail(id)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("* %d \n", t.ID)
+	fmt.Printf(" Website_url %s\n", t.Website_url)
+	fmt.Printf(" Name %s\n", t.Name)
+	fmt.Printf(" Location Iso %d\n", t.Location_iso)
+	fmt.Printf(" CheckRate %d\n", t.CheckRate)
+	fmt.Printf(" Location %s\n", t.Location)
 
 	return nil
 }
@@ -122,6 +183,19 @@ func cmdDelete(c *statuscake.Client, args ...string) error {
 	return c.Tests().Delete(id)
 }
 
+func cmdDeletePg(c *statuscake.Client, args ...string) error {
+	if len(args) != 1 {
+		return fmt.Errorf("command `delete` requires a single argument `ID`")
+	}
+
+	id, err := strconv.Atoi(args[0])
+	if err != nil {
+		return err
+	}
+
+	return c.PageSpeeds().Delete(id)
+}
+
 func askString(name string) string {
 	var v string
 
@@ -164,6 +238,30 @@ func cmdCreate(c *statuscake.Client, args ...string) error {
 	}
 
 	t2, err := c.Tests().Update(t)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("CREATED: \n%+v\n", t2)
+
+	return nil
+}
+
+
+func cmdCreatePg(c *statuscake.Client, args ...string) error {
+	name := askString("name")
+	websiteURL := askString("WebsiteURL")
+	checkRate := askString("CheckRate")
+	locationIso :=askString("LocationIso")
+
+	t := &statuscake.PartialPageSpeed{
+		Name:   name,
+		Website_url:    websiteURL,
+		Checkrate:      checkRate,
+		Location_iso:	locationIso,
+	}
+
+	t2, err := c.PageSpeeds().UpdatePartial(t)
 	if err != nil {
 		return err
 	}

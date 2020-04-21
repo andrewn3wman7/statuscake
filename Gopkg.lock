@@ -2,14 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
-  digest = "1:27dce89d419e7be582ae735623fb0b538012e62b08a87c0308c3b360de2a74b0"
-  name = "github.com/DreamItGetIT/statuscake"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "49ae6aae1769b896774d7e860e620f1bd8221355"
-
-[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -38,7 +30,7 @@
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
-    "require"
+    "require",
   ]
   pruneopts = "UT"
   revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
@@ -48,10 +40,9 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/DreamItGetIT/statuscake",
     "github.com/google/go-querystring/query",
     "github.com/stretchr/testify/assert",
-    "github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/require",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
