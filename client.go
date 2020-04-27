@@ -64,6 +64,7 @@ type Client struct {
 	testsClient Tests
 	pagespeedClient	PageSpeeds
 	sslClient	Ssls
+	perfDataClient PerfData
 }
 
 // New returns a new Client
@@ -174,6 +175,15 @@ func (c *Client) delete(path string, v url.Values) (*http.Response, error) {
 	}
 
 	return c.doRequest(r)
+}
+
+// PerfData returns a client that implements the `Performance Data` API.
+func (c *Client) PerfData() PerfData {
+	if c.perfDataClient == nil {
+		c.perfDataClient = newPerfClient(c)
+	}
+
+	return c.perfDataClient
 }
 
 // Tests returns a client that implements the `Tests` API.

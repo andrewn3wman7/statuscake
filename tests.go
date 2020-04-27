@@ -115,7 +115,11 @@ type Test struct {
 
 	// Use to specify whether redirects should be followed
 	FollowRedirect bool `json:"FollowRedirect" querystring:"FollowRedirect"`
+
+	// Use to specify the performance data
+	PerformanceData []TestPerfData
 }
+
 
 // Validate checks if the Test is valid. If it's invalid, it returns a ValidationError with all invalid fields. It returns nil otherwise.
 func (t *Test) Validate() error {
