@@ -29,6 +29,7 @@ func init() {
 		"create": cmdCreate,
 		"createpg": cmdCreatePg,
 		"update": cmdUpdate,
+		"updatepg": cmdUpdatePg,
 	}
 }
 
@@ -87,7 +88,7 @@ func cmdListSsl(c *statuscake.Client, args ...string) error {
 
 	for _, t := range tests {
 		fmt.Printf("* %d: %s\n", t.ID)
-		fmt.Printf("  Domain: %s\n", t.domain)
+		fmt.Printf("  Domain: %s\n", t.Domain)
 	}
 
 	return nil
@@ -100,10 +101,11 @@ func cmdListPg(c *statuscake.Client, args ...string) error {
 		return err
 	}
 
-	for _, t := range tests.PageSpeedList {
+	for _, t := range tests.Data {
 		fmt.Printf("* %d \n", t.ID)
-		fmt.Printf("  URL: %s\n", t.Website_url)
-		fmt.Printf("  Name: %d \n", t.Name)
+		fmt.Printf("  URL: %s\n", t.URL)
+		fmt.Printf("  Name: %d \n", t.Title)
+		fmt.Println(t.LatestStats.Requests)
 	}
 	return nil
 }
@@ -125,12 +127,10 @@ func cmdDetailPg(c *statuscake.Client, args ...string) error {
 	}
 
 	fmt.Printf("* %d \n", t.ID)
-	fmt.Printf(" Website_url %s\n", t.Website_url)
-	fmt.Printf(" Name %s\n", t.Name)
-	fmt.Printf(" Location Iso %d\n", t.Location_iso)
-	fmt.Printf(" CheckRate %d\n", t.CheckRate)
-	fmt.Printf(" Location %s\n", t.Location)
-
+	fmt.Printf("* %d \n", t.Website_url)
+	fmt.Printf("* %d \n", t.Checkrate)
+	fmt.Printf("* %d \n", t.AlertSmaller)
+	fmt.Printf("* %d \n", t.Location_iso)
 	return nil
 }
 
@@ -251,22 +251,51 @@ func cmdCreate(c *statuscake.Client, args ...string) error {
 func cmdCreatePg(c *statuscake.Client, args ...string) error {
 	name := askString("name")
 	websiteURL := askString("WebsiteURL")
-	checkRate := askString("CheckRate")
+	checkRate := askInt("CheckRate")
 	locationIso :=askString("LocationIso")
 
-	t := &statuscake.PartialPageSpeed{
+	t := &statuscake.PageSpeed{
 		Name:   name,
 		Website_url:    websiteURL,
 		Checkrate:      checkRate,
 		Location_iso:	locationIso,
 	}
 
-	t2, err := c.PageSpeeds().UpdatePartial(t)
+	t2, err := c.PageSpeeds().Create(t)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("CREATED: \n%+v\n", t2)
+	fmt.Printf("CREATED: \n%+v\n", t2.ID)
+
+	return nil
+}
+
+func cmdUpdatePg(c *statuscake.Client, args ...string) error {
+	if len(args) != 1 {
+		return fmt.Errorf("command `update` requires a single argument `TestID`")
+	}
+
+	id, err := strconv.Atoi(args[0])
+	if err != nil {
+		return err
+	}
+
+	tt := c.PageSpeeds()
+	t, err := tt.Detail(id)
+	if err != nil {
+		return err
+	}
+
+	t.ID = id
+	t.Website_url = askString(fmt.Sprintf("WebsiteName [%s]", t.Website_url))
+
+	t2, err := c.PageSpeeds().Update(t)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("UPDATED: \n%+v\n", t2)
 
 	return nil
 }

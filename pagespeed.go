@@ -4,118 +4,69 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	// "log"
+	"reflect"
 	"strings"
-
-	"github.com/google/go-querystring/query"
 )
 
 
 type PageSpeed struct {
-	ID              int           `json:"ID"              url:"id,omitempty"`
-	Name            string        `json:"Title"           url:"Title,omitempty"`
-	Website_url     string        `json:"URL"             url:"URL,omitempty"`
-	Location_iso    string        `json:"location_iso"    url:"location_iso,omitempty"`
-	Checkrate       string        `json:"checkrate"       url:"checkrate"`
-	Location        string        `json:"location"        url:"location"`
-	ContactGroupsC  string         `                      url:"contact_groups,omitempty"`
-	ContactGroups []string        `json:"contact_groups"`
-	// AlertBigger     string        `json:"alert_bigger"    url:"alert_bigger"`
-	// AlertSlower     string        `json:"alert_slower"    url:"alert_slower"`
-	// AlertSmaller	string        `json:"alert_smaller"   url:"alert_smaller"`
-
+	ID              int           `json:"id"              querystring:"id" querystringoptions:"omitempty"`
+	Name            string        `json:"name"            querystring:"name" querystringoptions:"omitempty"`
+	Website_url     string        `json:"website_url"     querystring:"website_url" querystringoptions:"omitempty"`
+	Location_iso    string        `json:"location_iso"    querystring:"location_iso" querystringoptions:"omitempty"`
+	Checkrate       int           `json:"checkrate"       querystring:"checkrate" querystringoptions:"omitempty"`
+	Location        string        `json:"location"        querystring:"location" querystringoptions:"omitempty"`
+	ContactGroup  []string        `json:"contact_groups"  querystring:"contact_groups"`
+	AlertSmaller    int           `json:"alert_smaller"   querystring:"alert_smaller"`
+	AlertBigger     int           `json:"alert_bigger"    querystring:"alert_bigger"`
+	AlertSlower     int           `json:"alert_slower"    querystring:"alert_slower"`
 }
 
-type PageSpeedResponse struct {
-    Success bool `json:"success"`
-    Message string `json:"message"`
-    PageSpeedList []*PageSpeed `json:"data"`
+	
+type Reply struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+	Data    struct {
+		ID            int      `json:"id"`
+		Name          string   `json:"name"`
+		WebsiteURL    string   `json:"website_url"`
+		Location      string   `json:"location"`
+		LocationIso   string   `json:"location_iso"`
+		Checkrate     int      `json:"checkrate"`
+		ContactGroups []string `json:"contact_groups"`
+		AlertSmaller  int      `json:"alert_smaller"`
+		AlertBigger   int      `json:"alert_bigger"`
+		AlertSlower   int      `json:"alert_slower"`
+		LatestStats   struct {
+			LoadtimeMs  int     `json:"Loadtime_ms"`
+			FilesizeKb  float64 `json:"Filesize_kb"`
+			Requests    int     `json:"Requests"`
+			HasIssue    bool    `json:"has_issue"`
+			LatestIssue string  `json:"latest_issue"`
+		} `json:"latest_stats"`
+	} `json:"data"`
 }
 
-//PartialPageSpeed represent a pagespeed test creation or modification
-type PartialPageSpeed struct {
-    ID              int
-    Name            string
-	Website_url     string
-    Location_iso    string
-	Checkrate       string
-    ContactGroupsC  string
-	// AlertBigger     string
-	// AlertSlower	    string
-	// AlertSmaller	string
-
-}
-
-type createPageSpeed struct {
-	ID              int                 `url:"id,omitempty"`
-	Name            string              `url:"name"           json:"name"`
-	Website_url     string              `url:"website_url"    json:"website_url"`
-	Location_iso    string              `url:"location_iso"   json:"location_iso"`
-	Checkrate       jsonNumberString    `url:"checkrate"      json:"checkrate"`
-	ContactGroupsC  string              `url:"contact_groups" json:"contact_groups"`
-}
-
-type updatePagespeed struct {
-	ID             int                 `url:"id"`
-	Name           string              `url:"name"           json:"name"`
-	Website_url	   string              `url:"website_url"    json:"website_url"`
-	Location_iso   string              `url:"location_iso"   json:"location_iso"`
-	Checkrate      jsonNumberString    `url:"checkrate"      json:"checkrate"`
-	ContactGroupsC string              `url:"contact_groups" json:"contact_groups"`
-}
-
-type pagespeedCreateResponse struct {
-	Success bool                          `json:"success"`
-	Message interface{}                   `json:"message"`
-	Data    *pagespeedCreateResponseData  `json:"data"`
-}
-
-type pagespeedCreateResponseData struct {
-	NewId int                 `json:"new_id"`
-}
-
-type pagespeedUpdateRespoonse struct {
-	Success bool              `json:"success"`
-	Message interface{}       `json:"message"`
+type ReplyAll struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+	Data    []struct {
+		ID            int      `json:"ID"`
+		Title         string   `json:"Title"`
+		URL           string   `json:"URL"`
+		Location      string   `json:"Location"`
+		LocationISO   string   `json:"Location_ISO"`
+		ContactGroups []string `json:"ContactGroups"`
+		LatestStats   struct {
+			LoadtimeMs int     `json:"Loadtime_ms"`
+			FilesizeKb float64 `json:"Filesize_kb"`
+			Requests   int     `json:"Requests"`
+		} `json:"LatestStats"`
+	} `json:"data"`
 }
 
 type pagespeeds struct {
 	client apiClient
-}
-
-func (cps *createPageSpeed) fromPartial(p *PartialPageSpeed) {
-	cps.ID = p.ID
-	cps.Name = p.Name
-	cps.Checkrate = jsonNumberString(p.Checkrate)
-	cps.Website_url = p.Website_url
-	cps.Location_iso = p.Location_iso
-	cps.ContactGroupsC = p.ContactGroupsC
-}
-
-func (cps *createPageSpeed) toPartial(p *PartialPageSpeed) {
-	p.ID = cps.ID
-	p.Name = cps.Name
-	p.Checkrate = string(cps.Checkrate)
-	p.Location_iso = cps.Location_iso
-	p.ContactGroupsC = cps.ContactGroupsC
-}
-
-func (ups *updatePagespeed) fromPartial(p *PartialPageSpeed) {
-	ups.ID = p.ID
-	ups.Name = p.Name
-	ups.Checkrate = jsonNumberString(p.Checkrate)
-	ups.Website_url = p.Website_url
-	ups.Location_iso = p.Location_iso
-	ups.ContactGroupsC = p.ContactGroupsC
-}
-
-func (ups *updatePagespeed) toPartial(p *PartialPageSpeed) {
-	p.ID = ups.ID
-	p.Name = ups.Name
-	p.Checkrate = string(ups.Checkrate)
-	p.Website_url = ups.Website_url
-	p.Location_iso = ups.Location_iso
-	p.ContactGroupsC = ups.ContactGroupsC
 }
 
 //NewPageSpeeds return a new pagespeeds
@@ -125,73 +76,22 @@ func NewPageSpeeds(c apiClient) PageSpeeds {
 	}
 }
 
-//PageSpeeds represent the actions done wit the API
+//PageSpeeds represent the actions done with the API
 type PageSpeeds interface {
-	All() (*PageSpeedResponse, error)
+	All() (*ReplyAll, error)
 	Detail(int) (*PageSpeed, error)
-	Update(*PartialPageSpeed) (*PageSpeed, error)
-	UpdatePartial(*PartialPageSpeed) (*PartialPageSpeed, error)
+	Update(*PageSpeed) (*PageSpeed, error)
 	Delete(ID int) error
-	completePageSpeed(*PartialPageSpeed) (*PageSpeed, error)
-	CreatePartial(*PartialPageSpeed) (*PartialPageSpeed, error)
-	Create(*PartialPageSpeed) (*PageSpeed, error)
-}
-
-//Create the pagespeed with the data in s and return the PageSpeed created
-func (tt *pagespeeds) Create(s *PartialPageSpeed) (*PageSpeed, error) {
-	var err error
-	s, err = tt.CreatePartial(s)
-	if err != nil {
-		return nil, err
-	}
-	return tt.completePageSpeed(s)
-}
-
-func (tt *pagespeeds) completePageSpeed(s *PartialPageSpeed) (*PageSpeed, error) {
-	full, err := tt.Detail(((*s).ID))
-	if err != nil {
-		return nil, err
-	}
-	(*full).ContactGroups = strings.Split((*s).ContactGroupsC, ",")
-	return full, nil
-}
-
-//CreatePartial create the pagespeed whith the data in s and return the PartialSsl created
-func (tt *pagespeeds) CreatePartial(s *PartialPageSpeed) (*PartialPageSpeed, error) {
-	(*s).ID = 0
-	var v url.Values
-	{
-		cps := createPageSpeed{}
-		cps.fromPartial(s)
-		v, _ = query.Values(cps)
-	}
-
-	rawResponse, err := tt.client.post("/Pagespeed/Update", v)
-	if err != nil {
-		return nil, fmt.Errorf("Error creating StatusCake Pagespeed: %s", err.Error())
-	}
-
-	var createResponse pagespeedCreateResponse
-	err = json.NewDecoder(rawResponse.Body).Decode(&createResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	if !createResponse.Success {
-		return nil, fmt.Errorf("%s", createResponse.Message.(string))
-	}
-
-	(*s).ID = int(createResponse.Data.NewId)
-	return s, nil
+	Create(*PageSpeed) (*PageSpeed, error)
 }
 
 //All return a list of all the pagespeed from the API
-func (tt *pagespeeds) All() (*PageSpeedResponse, error) {
+func (tt *pagespeeds) All() (*ReplyAll, error) {
 	rawResponse, err := tt.client.get("/Pagespeed", nil)
 	if err != nil {
 		return nil, fmt.Errorf("Error getting StatusCake Pagespeed: %s", err.Error())
 	}
-	var getResponse *PageSpeedResponse
+	var getResponse *ReplyAll
 	err = json.NewDecoder(rawResponse.Body).Decode(&getResponse)
 	if err != nil {
 		return nil, err
@@ -208,66 +108,151 @@ func (tt *pagespeeds) Delete(id int) error {
 	return nil
 }
 
-
 //Detail return the pagespeed corresponding to the ID
-func (tt *pagespeeds) Detail(ID int) (*PageSpeed, error) {
-	responses, err := tt.All()
+func (tt *pagespeeds) Detail(id int) (*PageSpeed, error) {
+	resp, err := tt.client.get("/Pagespeed", url.Values{"id": {fmt.Sprint(id)}})
 	if err != nil {
 		return nil, err
 	}
-	myPageSpeed, errF := findPageSpeed(responses, ID)
-	if errF != nil {
-		return nil, errF
-	}
-	return myPageSpeed, nil
-}
+	defer resp.Body.Close()
 
-//Update update the API with s and create one if s.ID=0 then return the corresponding Ssl
-func (tt *pagespeeds) Update(s *PartialPageSpeed) (*PageSpeed, error) {
-	var err error
-	s, err = tt.UpdatePartial(s)
-	if err != nil {
-		return nil, err
-	}
-	return tt.completePageSpeed(s)
-}
+	var dr *Reply
 
-//UpdatePartial update the API with s and create one if s.ID=0 then return the corresponding PartialSsl
-func (tt *pagespeeds) UpdatePartial(s *PartialPageSpeed) (*PartialPageSpeed, error) {
-	if (*s).ID == 0 {
-		return tt.CreatePartial(s)
-	}
-	
-	var v url.Values
-	{
-		us := updatePagespeed{}
-		us.fromPartial(s)
-		v, _ = query.Values(us)
-	}
-
-	rawResponse, err := tt.client.post("/Pagespeed/Update", v)
-	if err != nil {
-		return nil, fmt.Errorf("Error creating StatusCake PageSpeed: %s", err.Error())
-	}
-
-	var updateResponse pagespeedUpdateRespoonse
-	err = json.NewDecoder(rawResponse.Body).Decode(&updateResponse)
+	err = json.NewDecoder(resp.Body).Decode(&dr)
 	if err != nil {
 		return nil, err
 	}
 
-	if !updateResponse.Success {
-		return nil, fmt.Errorf("%s", updateResponse.Message.(string))
-	}
-	return s, nil
+	return dr.pagespeed(), nil
 }
 
-func findPageSpeed(responses *PageSpeedResponse, ID int) (*PageSpeed, error) {
-	var response *PageSpeed
-	for _, elem := range responses.PageSpeedList {
-		if (*elem).ID == ID {
-			return elem, nil
+
+//Update the API with params
+func (tt *pagespeeds) Update(t *PageSpeed) (*PageSpeed, error) {
+	fmt.Println(t.ToURLValuesPg())
+	resp, err := tt.client.post("/Pagespeed/Update", t.ToURLValuesPg())
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var ur updatePageSpeedResponse
+	err = json.NewDecoder(resp.Body).Decode(&ur)
+	if err != nil {
+		return nil, err
+	}
+
+	if !ur.Success {
+		return nil, &updateError{Message: ur.Message}
+	}
+
+	t2 := *t
+
+	return &t2, err
+}
+
+
+// Create pagespeed test with params
+func (tt *pagespeeds) Create(t *PageSpeed) (*PageSpeed, error) {
+	fmt.Println(t.ToURLValuesPg())
+	resp, err := tt.client.post("/Pagespeed/Update", t.ToURLValuesPg())
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var ur createPageSpeedResponse
+	err = json.NewDecoder(resp.Body).Decode(&ur)
+	if err != nil {
+		return nil, err
+	}
+
+	if !ur.Success {
+		return nil, &updateError{Message: ur.Message}
+	}
+
+	t2 := *t
+	t2.ID = ur.Data.NewId
+	fmt.Println(ur.Data)
+
+	return &t2, err
+}
+
+
+// ToURLValuesPg returns url.Values of all fields required to create/update a Test.
+func (t PageSpeed) ToURLValuesPg() url.Values {
+	values := make(url.Values)
+	st := reflect.TypeOf(t)
+	sv := reflect.ValueOf(t)
+	for i := 0; i < st.NumField(); i++ {
+		sf := st.Field(i)
+		tag := sf.Tag.Get(queryStringTag)
+		ft := sf.Type
+		if ft.Name() == "" && ft.Kind() == reflect.Ptr {
+			// Follow pointer.
+			ft = ft.Elem()
+		}
+
+		v := sv.Field(i)
+		options := sf.Tag.Get("querystringoptions")
+		omit := options == "omitempty" && isEmptyValuePg(v)
+
+		if tag != "" && !omit {
+			values.Set(tag, valueToQueryStringValuePg(v))
 		}
 	}
-	return response, fmt.Errorf("%s Not found", ID)
+
+	return values
+}
+
+func isEmptyValuePg(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		return v.Len() == 0
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Interface, reflect.Ptr:
+		return v.IsNil()
+	}
+
+	return false
+}
+
+func valueToQueryStringValuePg(v reflect.Value) string {
+	if v.Type().Name() == "bool" {
+		if v.Bool() {
+			return "1"
+		}
+
+		return "0"
+	}
+
+	if v.Type().Kind() == reflect.Slice {
+		if ss, ok := v.Interface().([]string); ok {
+			return strings.Join(ss, ",")
+		}
+	}
+
+	return fmt.Sprint(v)
+}
+
+func (d *Reply) pagespeed() *PageSpeed {
+	c := &PageSpeed{
+	}
+	c.ID = d.Data.ID
+	c.Name = d.Data.Name
+	c.Website_url = d.Data.WebsiteURL
+	c.Checkrate = d.Data.Checkrate
+	c.AlertSmaller = d.Data.AlertSmaller
+	c.AlertBigger= d.Data.AlertBigger
+	c.AlertSlower= d.Data.AlertSlower
+	c.Location_iso = d.Data.LocationIso
+	c.ContactGroup = d.Data.ContactGroups
+	return c
 }

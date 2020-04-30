@@ -17,6 +17,20 @@ type updateResponse struct {
 	InsertID int         `json:"InsertID"`
 }
 
+type createPageSpeedResponse struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+	Data    struct {
+		NewId int `json:"new_id"`
+	} `json:"data"`
+}
+
+type updatePageSpeedResponse struct {
+	Success  bool        `json:"Success"`
+	Message  string      `json:"Message"`
+	Data    []interface{} `json:"data"`
+}
+
 type deleteResponse struct {
 	Success bool   `json:"Success"`
 	Error   string `json:"Error"`
