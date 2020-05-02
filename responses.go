@@ -54,7 +54,7 @@ type detailResponse struct {
 	Status          string                       `json:"Status"`
 	Uptime          float64                      `json:"Uptime"`
 	CustomHeader    string                       `json:"CustomHeader"`
-	UserAgent       string                       `json:"UserAgent"`
+	// UserAgent       string                       `json:"UserAgent"`
 	CheckRate       int                          `json:"CheckRate"`
 	Timeout         int                          `json:"Timeout"`
 	LogoImage       string                       `json:"LogoImage"`
@@ -94,7 +94,7 @@ func (d *detailResponse) test() *Test {
 		WebsiteName:    d.WebsiteName,
 		WebsiteURL:     d.URI,
 		CustomHeader:   d.CustomHeader,
-		UserAgent:      d.UserAgent,
+		// UserAgent:      d.UserAgent,
 		ContactID:      d.ContactID,
 		ContactGroup:   contactGroupIds,
 		Status:         d.Status,
